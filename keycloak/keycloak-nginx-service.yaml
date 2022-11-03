@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-nginx-service
+  namespace: keycloak-ns
+spec:
+  selector:
+    app: keycloak-nginx
+  ports:
+    - name: keycloak-nginx-https
+      protocol: TCP
+      port: 8443
+      targetPort: 8443

@@ -1,0 +1,32 @@
+#san.cnf
+#
+[ req ]
+default_bits       = 2048
+default_keyfile    = server.key
+distinguished_name = req_distinguished_name
+req_extensions     = req_ext
+prompt             = no
+x509_extensions    = req_extensions
+string_mask        = utf8only
+#
+[ req_extensions ]
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always, issuer
+basicConstraints       = CA:FALSE
+keyUsage               = digitalSignature, keyEncipherment
+#
+[ req_distinguished_name ]
+countryName            = FR
+stateOrProvinceName    = 31
+localityName           = TLS
+organizationName       = ME
+organizationalUnitName = TOO
+commonName             = keycloak
+#
+[ req_ext ]
+subjectAltName = @alt_names
+[alt_names]
+DNS.1   = keycloak.kube.local
+DNS.2   = keycloak.keycloak-ns.svc.cluster.local
+DNS.3   = keycloak-service.keycloak-ns.svc.cluster.local
+DNS.4   = keycloak-nginx-service.keycloak-ns.svc.cluster.local

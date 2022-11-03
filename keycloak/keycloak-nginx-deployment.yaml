@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-nginx-deployment
+  namespace: keycloak-ns
+  labels:
+    app: keycloak-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak-nginx
+  template:
+    metadata:
+      labels:
+        app: keycloak-nginx
+    spec:
+      containers:
+      - name: keycloak-nginx
+        image: nginx:1.23.2-alpine
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8443
+            protocol: TCP
+            name: https
+
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 10m
+            memory: 128Mi
+
+        readinessProbe:
+          tcpSocket:
+            port: 8443
+          failureThreshold: 2
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+
+        livenessProbe:
+          tcpSocket:
+            port: 8443
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+
+        volumeMounts:
+
+          - name: nginx-configuration
+            mountPath: /etc/nginx/nginx.conf
+            subPath: NGINX_CONF_KEY
+
+          - name: application-configuration-ssl
+            mountPath: /etc/nginx/nginx.d/app-ssl.conf
+            subPath: APP_CONF_KEY_SSL
+
+          - name: keycloak-pem
+            mountPath: /etc/nginx/ssl/ext/cert-ext.pem
+            subPath: SSL_CERT_BUNDLE
+
+          - name: keycloak-privkey
+            mountPath: /etc/nginx/ssl/ext/cert-ext.key
+            subPath: SSL_KEY
+
+      volumes:
+
+        - name: nginx-configuration
+          secret:
+            secretName: keycloak-nginx-secret
+
+        - name: application-configuration-ssl
+          secret:
+            secretName: keycloak-nginx-secret
+
+        - name: keycloak-pem
+          secret:
+            secretName: keycloak-nginx-secret-tls
+
+        - name: keycloak-privkey
+          secret:
+            secretName: keycloak-nginx-secret-tls

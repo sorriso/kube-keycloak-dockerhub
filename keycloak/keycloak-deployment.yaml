@@ -1,0 +1,113 @@
+# kubectl -n keycloak-ns exec -it keycloak-74c7b78dfb-g5c6l -- /bin/sh
+# kubectl --namespace keycloak-ns logs keycloak-8bfcb564c-n8ww7
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak-ns
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:20.0.0-0
+        imagePullPolicy: Always
+        args: ["start-dev", "--https-port=8443", "--https-client-auth=none"]
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "admin"
+
+        #- name: KC_DB
+        #  value: "postgres"
+        #- name: KC_DB_URL
+        #  value: "jdbc:postgresql://secured/keycloak"
+        #- name: KC_DB_USERNAME
+        #  value: "keycloak"
+        #- name: KC_DB_PASSWORD
+        #  value: "secured"
+
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_HTTPS_CERTIFICATE_FILE
+          value: "/cert/cert.pem"
+        - name: KC_HTTPS_CERTIFICATE_KEY_FILE
+          value: "/cert/cert.key"
+
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: "false"
+        - name: KC_METRICS_ENABLED
+          value: "true"
+
+        - name: KC_FEATURES
+          value: "token-exchange"
+        - name: KC_HTTP_ENABLED
+          value: "false"
+        - name: KC_HTTPS_ENABLED
+          value: "true"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: KC_HOSTNAME_STRICT_BACKCHANNEL
+          value: "false"
+
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
+
+        readinessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          failureThreshold: 2
+          initialDelaySeconds: 5
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+
+        livenessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+
+        resources:
+          limits:
+            cpu: 500m
+            memory: 3Gi
+          requests:
+            cpu: 10m
+            memory: 512Mi
+
+        volumeMounts:
+          - name: keycloak-pem
+            mountPath: /cert/cert.pem
+            subPath: SSL_CERT_BUNDLE
+          - name: keycloak-privkey
+            mountPath: /cert/cert.key
+            subPath: SSL_KEY
+
+      volumes:
+        - name: keycloak-pem
+          secret:
+            secretName: keycloak-nginx-secret-tls
+        - name: keycloak-privkey
+          secret:
+            secretName: keycloak-nginx-secret-tls
