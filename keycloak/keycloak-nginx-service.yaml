@@ -3,6 +3,9 @@ kind: Service
 metadata:
   name: keycloak-nginx-service
   namespace: keycloak-ns
+  labels:
+    app: keycloak-nginx
+    layer: reverseproxy
 spec:
   selector:
     app: keycloak-nginx

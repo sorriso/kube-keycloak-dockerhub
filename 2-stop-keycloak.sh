@@ -1,3 +1,3 @@
 kubectl delete -f keycloak
-#sleep 3
-#kubectl apply -f common 
+sleep 1
+kubectl delete -f postgres

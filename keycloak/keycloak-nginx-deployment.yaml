@@ -5,6 +5,7 @@ metadata:
   namespace: keycloak-ns
   labels:
     app: keycloak-nginx
+    layer: reverseproxy
 spec:
   replicas: 1
   selector:
@@ -17,8 +18,8 @@ spec:
     spec:
       containers:
       - name: keycloak-nginx
-        image: nginx:1.23.2-alpine
-        imagePullPolicy: Always
+        image: l_nginx:latest
+        imagePullPolicy: Never
         ports:
           - containerPort: 8443
             protocol: TCP
@@ -60,13 +61,18 @@ spec:
             mountPath: /etc/nginx/nginx.d/app-ssl.conf
             subPath: APP_CONF_KEY_SSL
 
+
           - name: keycloak-pem
             mountPath: /etc/nginx/ssl/ext/cert-ext.pem
-            subPath: SSL_CERT_BUNDLE
+            subPath: tls.crt
 
           - name: keycloak-privkey
             mountPath: /etc/nginx/ssl/ext/cert-ext.key
-            subPath: SSL_KEY
+            subPath: tls.key
+
+
+          - name: pod-cert
+            mountPath: "/etc/nginx/ssl/int/"
 
       volumes:
 
@@ -78,10 +84,30 @@ spec:
           secret:
             secretName: keycloak-nginx-secret
 
+
         - name: keycloak-pem
           secret:
-            secretName: keycloak-nginx-secret-tls
+            secretName: keycloak-nginx-certificate
 
         - name: keycloak-privkey
           secret:
-            secretName: keycloak-nginx-secret-tls
+            secretName: keycloak-nginx-certificate
+
+
+        - name: pod-cert
+          csi:
+            driver: csi.cert-manager.io
+            readOnly: true
+            volumeAttributes:
+              csi.cert-manager.io/issuer-kind: ClusterIssuer
+              csi.cert-manager.io/issuer-name: vault-pki-cluster-clusterissuer
+              csi.cert-manager.io/issuer-group: cert-manager.io
+              csi.cert-manager.io/common-name: keycloak.nginx.cluster.local
+              csi.cert-manager.io/dns-names: ${POD_NAME}.${POD_NAMESPACE}.pod.cluster.local
+              csi.cert-manager.io/duration: 720h
+              csi.cert-manager.io/renew-before: 4h
+              csi.cert-manager.io/is-ca: "false"
+              csi.cert-manager.io/key-usages: digital signature,key encipherment,server auth,client auth
+              csi.cert-manager.io/certificate-file: cert-int.pem
+              csi.cert-manager.io/privatekey-file: cert-int.key
+              csi.cert-manager.io/ca-file: ca-int.pem

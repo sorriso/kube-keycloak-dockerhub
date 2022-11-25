@@ -1,0 +1,93 @@
+# kubectl -n keycloak-ns exec -it keycloak-postgres-77fd4ffbc5-4sr59 -- /bin/sh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-postgres
+  namespace: keycloak-ns
+  labels:
+    app: keycloak-postgres
+    layer: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: keycloak-postgres
+  template:
+    metadata:
+      labels:
+        app: keycloak-postgres
+
+    spec:
+
+      containers:
+
+      - name: keycloak-postgres
+
+        env:
+
+        - name: PGDATA
+          value: /var/lib/postgresql/data/
+
+        - name: POSTGRES_DB
+          value: postgres
+
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-postgres-secret
+              key: POSTGRESQL_ROOT_KEY
+
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-postgres-secret
+              key: POSTGRESQL_ROOT_PASSWORD_KEY
+
+        - name: POSTGRES_APP_DB
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-postgres-secret
+              key: POSTGRES_DB_KEY
+
+        - name: POSTGRES_APP_USER
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-postgres-secret
+              key: POSTGRESQL_USER_KEY
+
+        - name: POSTGRES_APP_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-postgres-secret
+              key: POSTGRESQL_USER_PASSWORD_KEY
+
+
+
+        image: postgres:14.6-bullseye
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 5432
+
+        volumeMounts:
+
+        - mountPath: /var/lib/postgresql/
+          name: postgres-storage
+
+        - name: db-init
+          mountPath: /docker-entrypoint-initdb.d/init-user-db.sh
+          subPath: POSTGRESQL_INIT_DB_KEY
+
+      restartPolicy: Always
+
+      volumes:
+
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: keycloak-postgres-volume-claim
+
+      - name: db-init
+        secret:
+          secretName: keycloak-postgres-secret

@@ -5,6 +5,7 @@ metadata:
   namespace: keycloak-ns
   labels:
     app: keycloak
+    layer: application
 spec:
   selector:
     app: keycloak
