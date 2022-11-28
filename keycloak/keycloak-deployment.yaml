@@ -1,5 +1,5 @@
 # kubectl -n keycloak-ns exec -it keycloak-57cd58cb4d-jq48r -- /bin/sh
-# kubectl --namespace keycloak-ns logs keycloak-8bfcb564c-n8ww7
+# kubectl -n keycloak-ns logs 	keycloak-nginx-deployment-779cc457-d7csm
 apiVersion: apps/v1
 kind: Deployment
 metadata:
