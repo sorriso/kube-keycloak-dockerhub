@@ -1,5 +1,5 @@
-# kubectl -n keycloak-ns exec -it keycloak-57cd58cb4d-jq48r -- /bin/sh
-# kubectl -n keycloak-ns logs 	keycloak-nginx-deployment-779cc457-d7csm
+# kubectl -n keycloak-ns exec -it keycloak-6988486fb7-lt7q2 -- /bin/sh
+# kubectl -n keycloak-ns logs	keycloak-7dd7ccd944-z4fgh
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,7 +22,7 @@ spec:
       - name: keycloak
         image: quay.io/keycloak/keycloak:20.0.0-0
         imagePullPolicy: Always
-        args: ["start-dev", "--https-port=8443", "--https-client-auth=none", "--metrics-enabled=true"]
+        args: ["start", "--https-port=8443", "--https-client-auth=none", "--metrics-enabled=true"]
 
         env:
 
@@ -31,6 +31,9 @@ spec:
 
         - name: KEYCLOAK_ADMIN_PASSWORD
           value: "admin"
+
+        - name: KEYCLOAK_FRONTEND_URL
+          value: "https://keycloak.kube.local"
 
         - name: KC_DB
           value: "postgres"

@@ -16,6 +16,6 @@ spec:
     - match: HostSNI(`keycloak.kube.local`)
       services:
         - name: keycloak-nginx-service
-          port: 8443
+          port: keycloak-nginx-https
   tls:
     passthrough: true
